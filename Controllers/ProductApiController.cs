@@ -92,4 +92,37 @@ public class ProductApiController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+    
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchProducts([FromQuery] string? name)
+    {
+        try
+        {
+            IEnumerable<Product> products;  // Sử dụng IEnumerable để lưu kết quả
+
+            // Nếu không có từ khóa tìm kiếm, trả về tất cả sản phẩm
+            if (string.IsNullOrEmpty(name))
+            {
+                products = await _productRepository.GetProductsAsync();  // Lấy tất cả sản phẩm
+            }
+            else
+            {
+                // Nếu có từ khóa tìm kiếm, lọc theo tên
+                products = await _productRepository.SearchProductsByNameAsync(name);
+            }
+
+            // Chuyển đổi từ IEnumerable sang List nếu cần thiết
+            var productList = products.ToList();  // Chuyển từ IEnumerable sang List
+
+            // Kiểm tra nếu không có sản phẩm nào
+            if (!productList.Any())
+                return NotFound("No products found matching the search criteria.");
+        
+            return Ok(productList);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
 }
